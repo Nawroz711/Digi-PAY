@@ -18,3 +18,12 @@ body {
   color: #A6FF2E;
   letter-spacing: -1px;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
