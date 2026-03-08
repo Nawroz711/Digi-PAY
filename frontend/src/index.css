@@ -1,7 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@800&display=swap");
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 body {
+  font-family: "Inter", sans-serif;
+  background-color: #0B0B0B;
+  color: #f8fafc;
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+}
+
+.logo {
+  font-family: "Poppins", sans-serif;
+  font-size: 30px;
+  font-style: italic;
+  color: #A6FF2E;
+  letter-spacing: -1px;
 }
