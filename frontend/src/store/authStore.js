@@ -6,27 +6,28 @@ const loadAuth = () => {
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY)
     if (!raw) {
-      return { isAuthenticated: false, user: null }
+      return { isAuthenticated: false, user: null, token: null }
     }
 
     const parsed = JSON.parse(raw)
     return {
-      isAuthenticated: Boolean(parsed?.user),
+      isAuthenticated: Boolean(parsed?.user && parsed?.token),
       user: parsed?.user ?? null,
+      token: parsed?.token ?? null,
     }
   } catch {
-    return { isAuthenticated: false, user: null }
+    return { isAuthenticated: false, user: null, token: null }
   }
 }
 
-const persistAuth = (user) => {
+const persistAuth = (user, token) => {
   try {
-    if (!user) {
+    if (!user || !token) {
       localStorage.removeItem(AUTH_STORAGE_KEY)
       return
     }
 
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user }))
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token }))
   } catch {
     // Ignore storage failures; in-memory state still works.
   }
@@ -36,12 +37,12 @@ const initialState = loadAuth()
 
 export const useAuthStore = create((set) => ({
   ...initialState,
-  login: (user) => {
-    persistAuth(user)
-    set({ isAuthenticated: true, user })
+  login: ({ user, token }) => {
+    persistAuth(user, token)
+    set({ isAuthenticated: true, user, token })
   },
   logout: () => {
-    persistAuth(null)
-    set({ isAuthenticated: false, user: null })
+    persistAuth(null, null)
+    set({ isAuthenticated: false, user: null, token: null })
   },
 }))

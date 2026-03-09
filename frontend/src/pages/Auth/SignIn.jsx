@@ -1,8 +1,11 @@
+import { Eye, EyeOff } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function SignIn() {
-    const { formData, error, isSubmitting, handleChange, handleSubmit } = useAuth('signin')
+    const { formData, isSubmitting, handleChange, handleSubmit } = useAuth('signin')
+    const [showPassword, setShowPassword] = useState(false)
 
     return (
         <main className="flex min-h-screen items-center justify-center px-6 py-12 bg-dark">
@@ -30,18 +33,25 @@ export default function SignIn() {
                         <label htmlFor="password" className="mb-1.5 block text-sm font-thin text-gray-400">
                             Password
                         </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className="w-full rounded-sm bg-secondary px-3.5 py-2.5 text-white outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
-                            placeholder="Enter your password"
-                        />
+                        <div className="relative">
+                            <input
+                                id="password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={formData.password}
+                                onChange={handleChange}
+                                className="w-full rounded-sm bg-secondary px-3.5 py-2.5 pr-11 text-white outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
+                                placeholder="Enter your password"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-primary"
+                            >
+                                {showPassword ? <EyeOff size={18} strokeWidth={1.8} /> : <Eye size={18} strokeWidth={1.8} />}
+                            </button>
+                        </div>
                     </div>
-
-                    {error && <p className="rounded-lg bg-red-500/15 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
                     <button
                         type="submit"
@@ -51,7 +61,7 @@ export default function SignIn() {
                         {isSubmitting ? 'Signing in...' : 'Sign in'}
                     </button>
                     <button
-                        type="submit"
+                        type="button"
                         disabled={isSubmitting}
                         className="w-full rounded-sm bg-none border border-secondary text-gray-400 px-4 py-2.5 text-sm font-semibold text-dark cursor-pointer transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
                     >
