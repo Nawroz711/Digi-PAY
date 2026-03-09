@@ -4,6 +4,8 @@ import SignUp from '../pages/Auth/SignUp'
 import Dashboard from '../pages/Dashboard'
 import NotFound from '../pages/Common/NotFound'
 import { useAuthStore } from '../store/authStore'
+import Profile from '../pages/Auth/Profile'
+import AuthenticatedLayout from '../components/layout/AuthenticatedLayout'
 
 function ProtectedRoute() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -12,7 +14,7 @@ function ProtectedRoute() {
     return <Navigate to="/signin" replace />
   }
 
-  return <Outlet />
+  return <AuthenticatedLayout />
 }
 
 function PublicOnlyRoute() {
@@ -54,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: '/dashboard',
         element: <Dashboard />,
+      },
+      {
+        path: '/profile',
+        element: <Profile />,
       },
     ],
   },

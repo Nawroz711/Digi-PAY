@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
+    "@yudiel/react-qr-scanner": "^2.5.1",
     "axios": "^1.13.6",
     "lucide-react": "^0.577.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.13.1",
     "react-toastify": "^11.0.5",
     "zustand": "^5.0.11"

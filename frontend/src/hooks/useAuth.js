@@ -13,6 +13,7 @@ const initialForms = {
     name: '',
     email: '',
     password: '',
+    phone: '',
   },
 }
 
@@ -31,12 +32,16 @@ export function useAuth(mode) {
 
   const validate = () => {
     if (mode === 'signup') {
-      if (!formData.name?.trim() || !formData.email?.trim() || !formData.password?.trim()) {
-        return 'Name, email, and password are required.'
+      if (!formData.name?.trim() || !formData.email?.trim() || !formData.password?.trim() || !formData.phone?.trim()) {
+        return 'Name, email, password, and phone are required.'
       }
 
       if (formData.password.length < 8) {
         return 'Password must be at least 8 characters.'
+      }
+
+      if (formData.phone.trim().length < 7 || formData.phone.trim().length > 20) {
+        return 'Phone number length is invalid.'
       }
 
       return ''
@@ -81,7 +86,6 @@ export function useAuth(mode) {
       }
 
       login({ user, token })
-      toast.success(response?.data?.message || 'Signed in successfully')
       const fromPath = location.state?.from?.pathname || '/dashboard'
       navigate(fromPath, { replace: true })
     } catch (error) {
