@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
 import { useLocation, useNavigate } from 'react-router-dom'
+import axiosClient from '../lib/axiosClient.js'
 import { useAuthStore } from '../store/authStore'
 
 const initialForms = {
@@ -11,7 +13,6 @@ const initialForms = {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
   },
 }
 
@@ -21,7 +22,6 @@ export function useAuth(mode) {
   const login = useAuthStore((state) => state.login)
 
   const [formData, setFormData] = useState(initialForms[mode] ?? initialForms.signin)
-  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (event) => {
@@ -35,12 +35,8 @@ export function useAuth(mode) {
         return 'Name, email, and password are required.'
       }
 
-      if (formData.password.length < 6) {
-        return 'Password must be at least 6 characters.'
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        return 'Passwords do not match.'
+      if (formData.password.length < 8) {
+        return 'Password must be at least 8 characters.'
       }
 
       return ''
@@ -48,6 +44,10 @@ export function useAuth(mode) {
 
     if (!formData.email?.trim() || !formData.password?.trim()) {
       return 'Email and password are required.'
+    }
+
+    if (formData.password.length < 8) {
+      return 'Password must be at least 8 characters.'
     }
 
     return ''
@@ -58,27 +58,37 @@ export function useAuth(mode) {
     const validationError = validate()
 
     if (validationError) {
-      setError(validationError)
+      toast.error(validationError)
       return
     }
 
     setIsSubmitting(true)
-    setError('')
 
     try {
       if (mode === 'signup') {
-        login({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-        })
-        navigate('/dashboard', { replace: true })
-      } else {
-        const fromPath = location.state?.from?.pathname || '/dashboard'
-        login({ email: formData.email.trim() })
-        navigate(fromPath, { replace: true })
+        const response = await axiosClient.post('/users/signup', formData)
+        toast.success(response?.data?.message || 'Account created successfully')
+        navigate('/signin', { replace: true })
+        return
       }
-    } catch {
-      setError(mode === 'signup' ? 'Unable to sign up. Please try again.' : 'Unable to sign in. Please try again.')
+
+      const response = await axiosClient.post('/users/signin', formData)
+      const token = response?.data?.token
+      const user = response?.data?.data
+
+      if (!token || !user) {
+        throw new Error('Invalid sign-in response')
+      }
+
+      login({ user, token })
+      toast.success(response?.data?.message || 'Signed in successfully')
+      const fromPath = location.state?.from?.pathname || '/dashboard'
+      navigate(fromPath, { replace: true })
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        (mode === 'signup' ? 'Unable to sign up. Please try again.' : 'Unable to sign in. Please try again.')
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -86,7 +96,6 @@ export function useAuth(mode) {
 
   return {
     formData,
-    error,
     isSubmitting,
     handleChange,
     handleSubmit,
