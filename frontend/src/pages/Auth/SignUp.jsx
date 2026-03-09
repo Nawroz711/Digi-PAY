@@ -45,6 +45,21 @@ export default function SignUp() {
           </div>
 
           <div>
+            <label htmlFor="phone" className="mb-1.5 block text-sm font-thin text-gray-400">
+              Phone
+            </label>
+            <input
+              id="phone"
+              name="phone"
+              type="text"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full rounded-sm bg-secondary px-3.5 py-2.5 text-white outline-none placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/30"
+              placeholder="e.g. +93700111222"
+            />
+          </div>
+
+          <div>
             <label htmlFor="password" className="mb-1.5 block text-sm font-thin text-gray-400">
               Password
             </label>

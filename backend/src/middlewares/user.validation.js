@@ -19,7 +19,9 @@ export const createUserValidation = [
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters'),
   body('phone')
-    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Phone is required')
     .trim()
     .isLength({ min: 7, max: 20 })
     .withMessage('Phone number length is invalid'),

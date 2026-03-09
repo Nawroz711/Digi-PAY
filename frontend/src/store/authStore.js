@@ -45,4 +45,9 @@ export const useAuthStore = create((set) => ({
     persistAuth(null, null)
     set({ isAuthenticated: false, user: null, token: null })
   },
+  setUser: (user) =>
+    set((state) => {
+      persistAuth(user, state.token)
+      return { ...state, user }
+    }),
 }))

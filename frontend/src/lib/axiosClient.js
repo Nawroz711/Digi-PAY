@@ -8,4 +8,20 @@ const axiosClient = axios.create({
   },
 })
 
+axiosClient.interceptors.request.use((config) => {
+  try {
+    const raw = localStorage.getItem('digipay_auth')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed?.token) {
+        config.headers.Authorization = `Bearer ${parsed.token}`
+      }
+    }
+  } catch {
+    // Ignore local storage parse issues.
+  }
+
+  return config
+})
+
 export default axiosClient
