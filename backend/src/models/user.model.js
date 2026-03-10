@@ -34,6 +34,18 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    pendingPhone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    phoneOtp: {
+      type: String,
+      select: false,
+    },
+    phoneOtpExpires: {
+      type: Date,
+    },
     isActive: {
       type: Boolean,
       default: true,
