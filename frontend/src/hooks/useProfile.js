@@ -17,6 +17,8 @@ export function useProfile() {
   const [isSaving, setIsSaving] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otp, setOtp] = useState('')
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -88,18 +90,27 @@ export function useProfile() {
       return
     }
 
+    if (formData.phone.trim().length < 7 || formData.phone.trim().length > 20) {
+      toast.error('Phone number length is invalid')
+      return
+    }
+
     setIsVerifying(true)
     try {
-      const response = await axiosClient.put('/users/profile/verify-phone', {
+      // First save the phone number to profile
+      await axiosClient.put('/users/profile', {
+        name: formData.name.trim(),
         phone: formData.phone.trim(),
       })
-      const updated = response?.data?.data
-      if (updated) {
-        setUser(updated)
-      }
-      toast.success(response?.data?.message || 'Phone verified successfully')
+
+      // Then send OTP
+      const response = await axiosClient.post('/users/profile/send-otp', {
+        phone: formData.phone.trim(),
+      })
+      toast.success(response?.data?.message || 'Verification code sent to your phone')
+      setShowOtpModal(true)
     } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to verify phone')
+      toast.error(error?.response?.data?.message || 'Failed to send verification code')
     } finally {
       setIsVerifying(false)
     }
@@ -126,6 +137,41 @@ export function useProfile() {
     }
   }
 
+  const handleVerifyOTP = async () => {
+    if (!otp.trim()) {
+      toast.error('Enter the verification code')
+      return
+    }
+
+    if (!/^\d{6}$/.test(otp.trim())) {
+      toast.error('Verification code must be 6 digits')
+      return
+    }
+
+    setIsVerifying(true)
+    try {
+      const response = await axiosClient.post('/users/profile/verify-otp', {
+        otp: otp.trim(),
+      })
+      const updated = response?.data?.data
+      if (updated) {
+        setUser(updated)
+      }
+      toast.success(response?.data?.message || 'Phone verified successfully')
+      setShowOtpModal(false)
+      setOtp('')
+    } catch (error) {
+      toast.error(error?.response?.data?.message || 'Invalid or expired verification code')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  const handleCloseOtpModal = () => {
+    setShowOtpModal(false)
+    setOtp('')
+  }
+
   return {
     user,
     formData,
@@ -139,5 +185,10 @@ export function useProfile() {
     setConfirmName,
     handleVerifyPhone,
     handleDeleteAccount,
+    showOtpModal,
+    otp,
+    setOtp,
+    handleVerifyOTP,
+    handleCloseOtpModal,
   }
 }

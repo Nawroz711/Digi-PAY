@@ -14,6 +14,11 @@ export default function Profile() {
     setConfirmName,
     handleVerifyPhone,
     handleDeleteAccount,
+    showOtpModal,
+    otp,
+    setOtp,
+    handleVerifyOTP,
+    handleCloseOtpModal,
   } = useProfile()
 
   return (
@@ -25,11 +30,10 @@ export default function Profile() {
             <p className="mt-1 text-sm text-slate-300">Manage your profile information.</p>
           </div>
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              user?.verified
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${user?.verified
                 ? 'bg-primary/20 text-primary'
                 : 'bg-red-500/15 text-red-300'
-            }`}
+              }`}
           >
             {user?.verified ? 'Verified' : 'Not verified'}
           </span>
@@ -80,8 +84,9 @@ export default function Profile() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full rounded-md border border-slate-700 bg-[#121212] px-3 py-2.5 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
-                placeholder="Enter phone number"
+                disabled={user?.verified}
+                className="w-full rounded-md border border-slate-700 bg-[#121212] px-3 py-2.5 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-60"
+                placeholder={user?.verified ? formData.phone : 'Enter phone number'}
               />
             </div>
 
@@ -108,6 +113,52 @@ export default function Profile() {
           </form>
         )}
       </section>
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-secondary p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-white">Verify Phone Number</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Enter the 6-digit code sent to your phone number: {formData.phone}
+            </p>
+
+            <div className="mt-4">
+              <label className="mb-1.5 block text-sm font-medium text-slate-300" htmlFor="otp">
+                Verification Code
+              </label>
+              <input
+                id="otp"
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                className="w-full rounded-md border border-slate-700 bg-[#121212] px-3 py-2.5 text-center text-2xl font-bold tracking-widest text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+                placeholder="000000"
+                maxLength={6}
+                autoComplete="one-time-code"
+              />
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={handleCloseOtpModal}
+                className="flex-1 rounded-md border border-slate-600 px-5 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyOTP}
+                disabled={isVerifying || otp.length !== 6}
+                className="flex-1 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-dark transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isVerifying ? 'Verifying...' : 'Verify'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {!isLoading && (
         <section className="mx-auto mt-6 w-full max-w-3xl rounded-2xl border border-red-500/30 bg-[#2a1313] p-5 sm:p-6">

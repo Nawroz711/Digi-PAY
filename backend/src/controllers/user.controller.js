@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js'
 import { getUniqueAccountNumber } from '../utils/accountNumber.js'
+import { generateOTP, sendOTPViaTwilio, hashOTP, compareOTP } from '../utils/otp.js'
 
 const SALT_ROUNDS = 12
 
@@ -144,12 +145,12 @@ export const updateMyProfile = async (req, res) => {
   }
 }
 
-export const verifyMyPhone = async (req, res) => {
+export const sendVerificationOTP = async (req, res) => {
   try {
     const { phone } = req.body
 
     if (!phone?.trim()) {
-      return res.status(400).json({ message: 'Phone is required for verification' })
+      return res.status(400).json({ message: 'Phone number is required' })
     }
 
     const user = await User.findById(req.userId)
@@ -162,8 +163,71 @@ export const verifyMyPhone = async (req, res) => {
       return res.status(400).json({ message: 'Phone number length is invalid' })
     }
 
-    user.phone = normalizedPhone
+    // Generate OTP
+    const otp = generateOTP()
+    const hashedOTP = await hashOTP(otp)
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    // Update user with pending phone and OTP
+    user.pendingPhone = normalizedPhone
+    user.phoneOtp = hashedOTP
+    user.phoneOtpExpires = otpExpires
+    await user.save()
+
+    // Send OTP via Twilio
+    await sendOTPViaTwilio(normalizedPhone, otp)
+
+    return res.status(200).json({
+      message: 'Verification code sent successfully',
+      data: {
+        pendingPhone: normalizedPhone,
+        otpExpires: otpExpires,
+      },
+    })
+  } catch (error) {
+    return res.status(500).json({ message: 'Failed to send verification code', error: error.message })
+  }
+}
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { otp } = req.body
+
+    if (!otp?.trim()) {
+      return res.status(400).json({ message: 'Verification code is required' })
+    }
+
+    if (!/^\d{6}$/.test(otp.trim())) {
+      return res.status(400).json({ message: 'Verification code must be 6 digits' })
+    }
+
+    const user = await User.findById(req.userId).select('+phoneOtp')
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    // Check if there's a pending phone number
+    if (!user.pendingPhone) {
+      return res.status(400).json({ message: 'No pending verification. Please request a new code.' })
+    }
+
+    // Check if OTP has expired
+    if (!user.phoneOtpExpires || new Date() > user.phoneOtpExpires) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' })
+    }
+
+    // Verify OTP
+    const isValid = await compareOTP(otp.trim(), user.phoneOtp)
+    if (!isValid) {
+      return res.status(400).json({ message: 'Invalid verification code' })
+    }
+
+    // Update user phone and verified status
+    user.phone = user.pendingPhone
     user.verified = true
+    user.pendingPhone = ''
+    user.phoneOtp = undefined
+    user.phoneOtpExpires = undefined
     await user.save()
 
     const safeUser = await User.findById(user._id).select('-password')
@@ -172,7 +236,7 @@ export const verifyMyPhone = async (req, res) => {
       data: safeUser,
     })
   } catch (error) {
-    return res.status(500).json({ message: 'Failed to verify phone', error: error.message })
+    return res.status(500).json({ message: 'Failed to verify code', error: error.message })
   }
 }
 

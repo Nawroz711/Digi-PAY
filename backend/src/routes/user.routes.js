@@ -5,7 +5,8 @@ import {
   getMyProfile,
   signInUser,
   updateMyProfile,
-  verifyMyPhone,
+  sendVerificationOTP,
+  verifyOTP,
 } from '../controllers/user.controller.js'
 import authMiddleware from '../middlewares/auth.middleware.js'
 import { createUserValidation, signInValidation } from '../middlewares/user.validation.js'
@@ -17,7 +18,8 @@ router.post('/signup', authLimiter, createUserValidation, createUser)
 router.post('/signin', authLimiter, signInValidation, signInUser)
 router.get('/profile', authMiddleware, getMyProfile)
 router.put('/profile', authMiddleware, updateMyProfile)
-router.put('/profile/verify-phone', authMiddleware, verifyMyPhone)
+router.post('/profile/send-otp', authMiddleware, sendVerificationOTP)
+router.post('/profile/verify-otp', authMiddleware, verifyOTP)
 router.delete('/profile', authMiddleware, deleteMyAccount)
 
 export default router
