@@ -5,6 +5,7 @@ import { useWallet } from '../../hooks/useWallet'
 import { usePayment } from '../../hooks/usePayment'
 import { loadStripe } from '@stripe/stripe-js'
 import axiosClient from '../../lib/axiosClient'
+import { useAuthStore } from '../../store/authStore'
 
 function PaymentForm({ amount, onSuccess, onCancel }) {
   const stripe = useStripe()
@@ -24,10 +25,8 @@ function PaymentForm({ amount, onSuccess, onCancel }) {
     setError(null)
 
     try {
-      // Create payment intent
       const clientSecret = await createPaymentIntent(amount)
 
-      // Confirm payment with card
       const cardElement = elements.getElement(CardElement)
       const { paymentIntent, error: stripeError } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
@@ -42,7 +41,6 @@ function PaymentForm({ amount, onSuccess, onCancel }) {
       }
 
       if (paymentIntent.status === 'succeeded') {
-        // Confirm with backend
         await confirmPayment(paymentIntent.id)
         onSuccess()
       }
@@ -109,12 +107,12 @@ function PaymentForm({ amount, onSuccess, onCancel }) {
 export default function Wallet() {
   const { wallet, isLoading, refreshWallet } = useWallet()
   const { stripeKey, isLoadingKey } = usePayment()
+  const user = useAuthStore((state) => state.user)
   const [amount, setAmount] = useState('')
-  const [activeTab, setActiveTab] = useState('add') // 'add' or 'withdraw'
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState(0)
 
-  const handleAddFunds = () => {
+  const handleAddCash = () => {
     const numAmount = parseFloat(amount)
     if (!numAmount || numAmount <= 0) {
       toast.error('Enter a valid amount')
@@ -131,34 +129,9 @@ export default function Wallet() {
     refreshWallet()
   }
 
-  const handleWithdraw = async () => {
-    const numAmount = parseFloat(amount)
-    if (!numAmount || numAmount <= 0) {
-      toast.error('Enter a valid amount')
-      return
-    }
-
-    try {
-      const response = await axiosClient.post('/wallet/withdraw', { amount: numAmount })
-      const data = response.data
-
-      if (data.message) {
-        toast.success(data.message)
-        setAmount('')
-        refreshWallet()
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to withdraw funds')
-    }
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (activeTab === 'add') {
-      handleAddFunds()
-    } else {
-      handleWithdraw()
-    }
+    handleAddCash()
   }
 
   if (isLoading || isLoadingKey) {
@@ -171,77 +144,115 @@ export default function Wallet() {
     )
   }
 
+  const accountNumber = user?.accountNumber || ''
+  const formattedAccount = accountNumber ? `${accountNumber.slice(0, 4)} ${accountNumber.slice(4, 8)} ${accountNumber.slice(8, 12)}` : '**** **** **** ****'
+
   return (
-    <main className="min-h-screen bg-dark px-4 pb-16 pt-6 sm:px-6">
-      <section className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-700 bg-secondary p-5 shadow-xl sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-white">My Wallet</h1>
-            <p className="mt-1 text-sm text-slate-300">Manage your wallet balance</p>
-          </div>
-        </div>
+    <main className="min-h-screen bg-dark px-4 pb-20 pt-6 sm:px-6">
+      <section className="mx-auto w-full max-w-4xl">
+        <h1 className="text-2xl font-semibold text-white mb-6">My Wallet</h1>
 
-        {/* Wallet Balance Card */}
-        <div className="mt-6 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-6">
-          <p className="text-sm font-medium text-slate-300">Available Balance</p>
-          <p className="mt-2 text-4xl font-bold text-white">
-            ${wallet?.balance?.toFixed(2) || '0.00'}
-          </p>
-          <p className="mt-1 text-sm text-slate-400">{wallet?.currency || 'USD'}</p>
-        </div>
-
-        {/* Add/Withdraw Form */}
-        <div className="mt-6">
-          <div className="flex rounded-lg border border-slate-700 bg-[#121212] p-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab('add')}
-              className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${
-                activeTab === 'add'
-                  ? 'bg-primary text-dark'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+        {/* Two Column Layout - Card Left, Form Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left - Real MasterCard Style */}
+          <div className="relative">
+            <div 
+              className="relative w-full h-56 rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+              }}
             >
-              Add Funds
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('withdraw')}
-              className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition ${
-                activeTab === 'withdraw'
-                  ? 'bg-primary text-dark'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Withdraw
-            </button>
-          </div>
+              {/* Metallic shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-black/20"></div>
+              
+              {/* Top pattern */}
+              <div className="absolute top-0 left-0 right-0 h-20 opacity-10">
+                <svg viewBox="0 0 400 100" className="w-full h-full">
+                  <circle cx="50" cy="50" r="40" fill="#00D4AA" />
+                  <circle cx="90" cy="50" r="40" fill="#FF6B6B" />
+                </svg>
+              </div>
 
-          <form className="mt-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-300" htmlFor="amount">
-                Amount ({wallet?.currency || 'USD'})
-              </label>
-              <input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-md border border-slate-700 bg-[#121212] px-3 py-2.5 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
-                placeholder="Enter amount"
-              />
+              {/* MasterCard Circles - Real Style */}
+              <div className="absolute top-5 right-6 flex items-center">
+                <div className="h-12 w-12 rounded-full border-2 border-[#1a1a1a] bg-yellow-400 opacity-90"></div>
+                <div className="h-12 w-12 rounded-full border-2 border-[#1a1a1a] bg-red-500 opacity-90 -ml-4"></div>
+              </div>
+              
+              {/* Card Content */}
+              <div className="relative z-10 p-6 h-full flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold text-white tracking-[0.2em]">DigiPay</span>
+                  <svg className="w-12 h-8" viewBox="0 0 48 32" fill="none">
+                    <circle cx="16" cy="16" r="14" fill="#EB001B" fillOpacity="0.8"/>
+                    <circle cx="32" cy="16" r="14" fill="#F79E1B" fillOpacity="0.8"/>
+                    <path d="M24 8a14 14 0 0 0 0 16 14 14 0 0 0 0-16z" fill="#FF5F00"/>
+                  </svg>
+                </div>
+
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Account Number</p>
+                  <p className="text-lg font-mono font-semibold tracking-[0.25em] text-white">
+                    {formattedAccount}
+                  </p>
+                </div>
+
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">Balance</p>
+                    <p className="text-2xl font-bold text-white">
+                      ${wallet?.balance?.toFixed(2) || '0.00'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <span className="text-xs font-medium text-green-400">Active</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom shine */}
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={!amount || parseFloat(amount) <= 0}
-              className="mt-4 w-full rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-dark transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {activeTab === 'add' ? 'Add Funds' : 'Withdraw Funds'}
-            </button>
-          </form>
+          {/* Right - Add Cash Form */}
+          <div className="rounded-2xl border border-slate-700 bg-secondary p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-white mb-4">Add Cash to Wallet</h2>
+            <p className="text-sm text-slate-300 mb-6">Add funds to your DigiPay wallet using your card</p>
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="mb-1.5 block text-sm font-medium text-slate-300" htmlFor="amount">
+                  Amount (USD)
+                </label>
+                <input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full rounded-md border border-slate-700 bg-[#121212] px-3 py-3 text-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 text-lg"
+                  placeholder="Enter amount"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={!amount || parseFloat(amount) <= 0}
+                className="w-full rounded-md bg-primary px-5 py-3 text-base font-semibold text-dark transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Add Cash to Wallet
+              </button>
+            </form>
+
+            <div className="mt-6 pt-4 border-t border-slate-700">
+              <p className="text-xs text-slate-400 text-center">
+                Secured by Stripe. Your payment information is encrypted.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -249,7 +260,7 @@ export default function Wallet() {
       {showPaymentModal && stripeKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-secondary p-6 shadow-xl">
-            <h2 className="text-xl font-semibold text-white">Add Funds</h2>
+            <h2 className="text-xl font-semibold text-white">Add Cash to Wallet</h2>
             <p className="mt-2 text-sm text-slate-300">
               Amount: <span className="font-semibold text-primary">${paymentAmount}</span>
             </p>

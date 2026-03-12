@@ -1,4 +1,4 @@
-import { LogOut, ScanLine, Search, Wallet, X } from 'lucide-react'
+import { LogOut, Search, Wallet, X } from 'lucide-react'
 import { useState } from 'react'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import QRCode from 'react-qr-code'
@@ -24,7 +24,7 @@ export default function AuthHeader() {
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-[#121317]/75 px-4 py-3 backdrop-blur-sm sm:px-6">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 sm:gap-4">
         <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-          <Link to="/dashboard" className="logo shrink-0 text-2xl sm:text-[30px]">
+          <Link to="/wallet" className="logo shrink-0 text-2xl sm:text-[30px]">
             DigiPay
           </Link>
 
@@ -50,18 +50,6 @@ export default function AuthHeader() {
           >
             <Wallet size={16} strokeWidth={1.25} />
           </Link>
-          <button
-            type="button"
-            title="Scan"
-            onClick={() => {
-              setQrMode('qr')
-              setScannedAccount('')
-              setShowQrDialog(true)
-            }}
-            className="cursor-pointer rounded-full border border-slate-700 p-2 text-slate-300 transition hover:border-primary hover:text-primary"
-          >
-            <ScanLine size={16} strokeWidth={1.25} />
-          </button>
           <Link to="/profile">
             <div className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-primary text-sm font-semibold text-dark">
               {avatarChar}
