@@ -5,6 +5,7 @@ import Dashboard from '../pages/Dashboard'
 import NotFound from '../pages/Common/NotFound'
 import { useAuthStore } from '../store/authStore'
 import Profile from '../pages/Auth/Profile'
+import Wallet from '../pages/Wallet/Wallet'
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout'
 
 function ProtectedRoute() {
@@ -60,6 +61,10 @@ export const router = createBrowserRouter([
       {
         path: '/profile',
         element: <Profile />,
+      },
+      {
+        path: '/wallet',
+        element: <Wallet />,
       },
     ],
   },

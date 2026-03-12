@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import User from '../models/user.model.js'
+import Wallet from '../models/wallet.model.js'
 import { getUniqueAccountNumber } from '../utils/accountNumber.js'
 import { generateOTP, sendOTPViaTwilio, hashOTP, compareOTP } from '../utils/otp.js'
 
@@ -32,12 +33,19 @@ export const createUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
     const accountNumber = await getUniqueAccountNumber((value) => User.exists({ accountNumber: value }))
 
-    await User.create({
+    const user = await User.create({
       name,
       email: normalizedEmail,
       password: hashedPassword,
       phone: phone.trim(),
       accountNumber,
+    })
+
+    // Create wallet for the user with default balance of 0
+    await Wallet.create({
+      userId: user._id,
+      balance: 0,
+      currency: 'USD',
     })
 
     return res.status(201).json({ message: 'User created successfully' })

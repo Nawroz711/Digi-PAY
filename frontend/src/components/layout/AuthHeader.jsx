@@ -1,4 +1,4 @@
-import { LogOut, ScanLine, Search, X } from 'lucide-react'
+import { LogOut, ScanLine, Search, Wallet, X } from 'lucide-react'
 import { useState } from 'react'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import QRCode from 'react-qr-code'
@@ -43,6 +43,13 @@ export default function AuthHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            to="/wallet"
+            title="Wallet"
+            className="cursor-pointer rounded-full border border-slate-700 p-2 text-slate-300 transition hover:border-primary hover:text-primary"
+          >
+            <Wallet size={16} strokeWidth={1.25} />
+          </Link>
           <button
             type="button"
             title="Scan"

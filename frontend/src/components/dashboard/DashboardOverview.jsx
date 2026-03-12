@@ -1,4 +1,4 @@
-export default function DashboardOverview() {
+export default function DashboardOverview({ wallet }) {
   const weeklyData = [
     { day: 'Mon', value: 38, amount: '$420' },
     { day: 'Tue', value: 55, amount: '$680' },
@@ -9,11 +9,13 @@ export default function DashboardOverview() {
     { day: 'Sun', value: 49, amount: '$590' },
   ]
 
+  const balance = wallet?.balance ?? 0
+
   return (
     <section className="mx-auto mt-6 grid w-full max-w-6xl gap-4 sm:gap-5 lg:grid-cols-3">
       <article className="rounded-2xl border border-slate-700 bg-secondary p-4 sm:p-5 lg:col-span-2">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Account</p>
-        <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">$12,480.00</h2>
+        <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">${balance.toFixed(2)}</h2>
         <p className="mt-1 text-sm text-slate-300">Available balance</p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">

@@ -1,11 +1,13 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
+dotenv.config()
+
 import express from 'express'
 import connectDB from './src/config/mongodb.js'
 import { globalLimiter } from './src/middlewares/rateLimiter.js'
 import userRoutes from './src/routes/user.routes.js'
-
-dotenv.config()
+import walletRoutes from './src/routes/wallet.routes.js'
+import paymentRoutes from './src/routes/payment.routes.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -27,6 +29,8 @@ app.get('/', (_req, res) => {
 })
 
 app.use('/api/users', userRoutes)
+app.use('/api/wallet', walletRoutes)
+app.use('/api/payment', paymentRoutes)
 
 const startServer = async () => {
   try {
