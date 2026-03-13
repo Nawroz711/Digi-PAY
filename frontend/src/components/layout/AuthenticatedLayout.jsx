@@ -21,7 +21,7 @@ const dockMenus = [
   { id: 'receive', label: 'Receive', icon: Download, path: '/receive' },
   { id: 'scan', label: 'Scan', icon: ScanLine, type: 'action' },
   { id: 'topup', label: 'Top Up', icon: Smartphone, path: '/topup' },
-  { id: 'lools', label: 'Tools', icon: ToolCase, path: '/topup' },
+  { id: 'tools', label: 'Tools', icon: ToolCase, path: '/tools' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
 ]
 
@@ -45,6 +45,13 @@ export default function AuthenticatedLayout() {
         navigate(menu.path)
       }
     }
+  }
+
+  const handleScanResult = (account) => {
+    setScannedAccount(account)
+    // Navigate to send page with scanned account
+    navigate(`/send?to=${account}`)
+    setShowQrDialog(false)
   }
 
   const accountNumber = user?.accountNumber || ''
@@ -133,26 +140,26 @@ export default function AuthenticatedLayout() {
                     <p className="text-sm text-slate-300">Scan another user QR code:</p>
                     <div className="mt-3 overflow-hidden rounded-lg border border-slate-700 bg-[#111216]">
                       <Scanner
-                        onScan={(detectedCodes) => {
-                          const codeValue = detectedCodes?.[0]?.rawValue || ''
-                          if (codeValue) {
-                            setScannedAccount(codeValue)
+                        onScan={(result) => {
+                          if (result && result[0]?.rawValue) {
+                            handleScanResult(result[0].rawValue)
                           }
                         }}
-                        onError={() => {}}
-                        constraints={{ facingMode: 'environment' }}
+                        onError={(error) => {
+                          console.log('Scanner error:', error)
+                        }}
+                        allowMultiple={true}
+                        scanDelay={1000}
+                        constraints={{
+                          facingMode: 'environment',
+                          width: { min: 320, ideal: 640, max: 1920 },
+                          height: { min: 240, ideal: 480, max: 1080 }
+                        }}
                         styles={{
                           container: { width: '100%' },
-                          video: { width: '100%', height: '220px', objectFit: 'cover' },
+                          video: { width: '100%', borderRadius: '8px' }
                         }}
                       />
-                    </div>
-
-                    <div className="mt-3 rounded-md border border-slate-700 bg-[#111216] px-3 py-2.5">
-                      <p className="text-xs text-slate-400">Scanned account number</p>
-                      <p className="mt-1 break-all text-sm font-medium text-primary">
-                        {scannedAccount || 'No QR scanned yet'}
-                      </p>
                     </div>
                   </div>
                 )}

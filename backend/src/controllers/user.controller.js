@@ -24,10 +24,18 @@ export const createUser = async (req, res) => {
     }
 
     const normalizedEmail = email.toLowerCase()
+    const normalizedPhone = phone.trim()
 
-    const existing = await User.findOne({ email: normalizedEmail })
-    if (existing) {
+    // Check if email already exists
+    const existingEmail = await User.findOne({ email: normalizedEmail })
+    if (existingEmail) {
       return res.status(409).json({ message: 'Email already exists' })
+    }
+
+    // Check if phone already exists
+    const existingPhone = await User.findOne({ phone: normalizedPhone })
+    if (existingPhone) {
+      return res.status(409).json({ message: 'Phone number already exists' })
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)

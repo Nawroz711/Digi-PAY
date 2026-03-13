@@ -1,23 +1,77 @@
-import { LogOut, Search, Wallet, X } from 'lucide-react'
-import { useState } from 'react'
+import { LogOut, Search, Wallet, X, Bell, Check, Trash2 } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import { Scanner } from '@yudiel/react-qr-scanner'
 import QRCode from 'react-qr-code'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../../hooks/useNotification'
 
 export default function AuthHeader() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
+  
   const [showQrDialog, setShowQrDialog] = useState(false)
   const [qrMode, setQrMode] = useState('qr')
   const [scannedAccount, setScannedAccount] = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
+  
+  const notificationRef = useRef(null)
+  
+  // Notification hooks
+  const { data: notificationData, isLoading: notificationsLoading } = useNotifications({ limit: 10 })
+  const { data: unreadData } = useUnreadCount()
+  const markAsReadMutation = useMarkAsRead()
+  const markAllAsReadMutation = useMarkAllAsRead()
+  const deleteNotificationMutation = useDeleteNotification()
+  
+  const notifications = notificationData?.data || []
+  const unreadCount = unreadData?.count || 0
+  
   const avatarChar = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase()
   const accountNumber = user?.accountNumber || ''
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleLogout = () => {
     logout()
     navigate('/signin', { replace: true })
+  }
+
+  const handleMarkAsRead = async (id) => {
+    await markAsReadMutation.mutateAsync(id)
+  }
+
+  const handleMarkAllRead = async () => {
+    await markAllAsReadMutation.mutateAsync()
+  }
+
+  const handleDeleteNotification = async (id) => {
+    await deleteNotificationMutation.mutateAsync(id)
+  }
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now - date
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+    
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString()
   }
 
   return (
@@ -43,6 +97,87 @@ export default function AuthHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          {/* Notifications Bell */}
+          <div className="relative" ref={notificationRef}>
+            <button
+              type="button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              title="Notifications"
+              className="cursor-pointer relative rounded-full border border-slate-700 p-2 text-slate-300 transition hover:border-primary hover:text-primary"
+            >
+              <Bell size={16} strokeWidth={1.25} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 top-12 w-80 rounded-xl border border-slate-700 bg-secondary shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-700 p-3">
+                  <h3 className="font-semibold text-white">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-80 overflow-y-auto">
+                  {notificationsLoading ? (
+                    <div className="p-4 text-center text-slate-400">Loading...</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-4 text-center text-slate-400">No notifications</div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div
+                        key={notification._id}
+                        className={`flex items-start gap-3 border-b border-slate-700/50 p-3 transition hover:bg-white/5 ${
+                          !notification.isRead ? 'bg-primary/5' : ''
+                        }`}
+                      >
+                        <div className="mt-1 flex h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${!notification.isRead ? 'font-semibold text-white' : 'text-slate-300'}`}>
+                            {notification.title}
+                          </p>
+                          <p className="truncate text-xs text-slate-400">{notification.message}</p>
+                          <p className="mt-1 text-xs text-slate-500">{formatDate(notification.createdAt)}</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {!notification.isRead && (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkAsRead(notification._id)}
+                              className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-primary"
+                              title="Mark as read"
+                            >
+                              <Check size={14} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNotification(notification._id)}
+                            className="rounded p-1 text-slate-400 hover:bg-white/10 hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <Link
             to="/wallet"
             title="Wallet"

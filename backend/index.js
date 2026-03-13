@@ -8,6 +8,8 @@ import { globalLimiter } from './src/middlewares/rateLimiter.js'
 import userRoutes from './src/routes/user.routes.js'
 import walletRoutes from './src/routes/wallet.routes.js'
 import paymentRoutes from './src/routes/payment.routes.js'
+import transactionRoutes from './src/routes/transaction.routes.js'
+import notificationRoutes from './src/routes/notification.routes.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -31,6 +33,8 @@ app.get('/', (_req, res) => {
 app.use('/api/users', userRoutes)
 app.use('/api/wallet', walletRoutes)
 app.use('/api/payment', paymentRoutes)
+app.use('/api/transaction', transactionRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 const startServer = async () => {
   try {

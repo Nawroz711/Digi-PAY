@@ -1,79 +1,77 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import axiosClient from '../lib/axiosClient'
 
+// Query keys
+export const walletKeys = {
+  all: ['wallet'],
+  details: () => [...walletKeys.all, 'detail'],
+}
+
+/**
+ * Hook to fetch wallet data with React Query
+ * Maintains backward compatibility with existing code
+ */
 export function useWallet() {
-  const [wallet, setWallet] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProcessing, setIsProcessing] = useState(false)
-
-  useEffect(() => {
-    const fetchWallet = async () => {
-      try {
-        const response = await axiosClient.get('/wallet')
-        setWallet(response?.data?.data)
-      } catch (error) {
-        toast.error(error?.response?.data?.message || 'Failed to load wallet')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchWallet()
-  }, [])
-
-  const addFunds = async (amount) => {
-    if (!amount || amount <= 0) {
-      toast.error('Enter a valid amount')
-      return
-    }
-
-    setIsProcessing(true)
-    try {
-      const response = await axiosClient.post('/wallet/add-funds', { amount })
-      setWallet(response?.data?.data)
-      toast.success(response?.data?.message || 'Funds added successfully')
-      return true
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to add funds')
-      return false
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  const withdrawFunds = async (amount) => {
-    if (!amount || amount <= 0) {
-      toast.error('Enter a valid amount')
-      return
-    }
-
-    setIsProcessing(true)
-    try {
-      const response = await axiosClient.post('/wallet/withdraw', { amount })
-      setWallet(response?.data?.data)
-      toast.success(response?.data?.message || 'Funds withdrawn successfully')
-      return true
-    } catch (error) {
-      toast.error(error?.response?.data?.message || 'Failed to withdraw funds')
-      return false
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
-  return {
-    wallet,
-    isLoading,
-    isProcessing,
-    addFunds,
-    withdrawFunds,
-    refreshWallet: () => {
-      setIsLoading(true)
-      axiosClient.get('/wallet')
-        .then((response) => setWallet(response?.data?.data))
-        .catch((error) => toast.error(error?.response?.data?.message || 'Failed to load wallet'))
-        .finally(() => setIsLoading(false))
+  const { data, isLoading, error, isFetching, refetch, ...rest } = useQuery({
+    queryKey: walletKeys.details(),
+    queryFn: async () => {
+      const response = await axiosClient.get('/wallet')
+      return response.data
     },
+    refetchOnMount: true,
+    staleTime: 0,
+  })
+
+  // Return in the format expected by existing components
+  return {
+    wallet: data?.data,
+    isLoading,
+    isProcessing: isFetching,
+    error,
+    refreshWallet: refetch,
+    ...rest,
   }
+}
+
+/**
+ * Hook to add funds to wallet
+ */
+export function useAddFunds() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (amount) => {
+      const response = await axiosClient.post('/wallet/add-funds', { amount })
+      return response.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: walletKeys.all })
+      toast.success(data?.message || 'Funds added successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to add funds')
+    },
+  })
+}
+
+/**
+ * Hook to withdraw funds from wallet
+ */
+export function useWithdrawFunds() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (amount) => {
+      const response = await axiosClient.post('/wallet/withdraw', { amount })
+      return response.data
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: walletKeys.all })
+      toast.success(data?.message || 'Funds withdrawn successfully')
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to withdraw funds')
+    },
+  })
 }

@@ -52,6 +52,32 @@ export const sendOTPViaTwilio = async (phoneNumber, otp) => {
 }
 
 /**
+ * Send custom SMS via Twilio
+ * @param {string} phoneNumber - Phone number to send SMS to
+ * @param {string} message - Custom message body
+ * @returns {Promise<object>} Twilio message response
+ */
+export const sendSMS = async (phoneNumber, message) => {
+  const client = getTwilioClient()
+  const fromNumber = process.env.TWILIO_PHONE_NUMBER
+
+  if (!fromNumber) {
+    throw new Error('Twilio phone number is not configured')
+  }
+
+  // Format phone number to ensure it has country code
+  const formattedPhone = formatPhoneNumber(phoneNumber)
+
+  const result = await client.messages.create({
+    body: message,
+    from: fromNumber,
+    to: formattedPhone,
+  })
+
+  return result
+}
+
+/**
  * Format phone number to ensure it has country code
  * @param {string} phoneNumber - Phone number to format
  * @returns {string} Formatted phone number

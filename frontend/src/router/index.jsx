@@ -6,6 +6,10 @@ import NotFound from '../pages/Common/NotFound'
 import { useAuthStore } from '../store/authStore'
 import Profile from '../pages/Auth/Profile'
 import Wallet from '../pages/Wallet/Wallet'
+import Send from '../pages/Wallet/Send'
+import TopUp from '../pages/Wallet/TopUp'
+import Tools from '../pages/Wallet/Tools'
+import Receive from '../pages/Wallet/Receive'
 import AuthenticatedLayout from '../components/layout/AuthenticatedLayout'
 
 function ProtectedRoute() {
@@ -65,6 +69,22 @@ export const router = createBrowserRouter([
       {
         path: '/wallet',
         element: <Wallet />,
+      },
+      {
+        path: '/send',
+        element: <Send />,
+      },
+      {
+        path: '/topup',
+        element: <TopUp />,
+      },
+      {
+        path: '/tools',
+        element: <Tools />,
+      },
+      {
+        path: '/receive',
+        element: <Receive />,
       },
     ],
   },
