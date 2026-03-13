@@ -1,97 +1,48 @@
 # Digi-PAY
 
-A modern digital wallet application built with the MERN stack (MongoDB, Express, React, Node.js). Digi-PAY allows users to send and receive money, manage their wallet, and perform various financial transactions.
+A modern digital wallet application built with the MERN stack. Digi-PAY allows users to send and receive money, manage their wallet, and perform various financial transactions.
 
 ## Features
 
 ### Authentication
-- **User Registration** - Sign up with name, email, phone number, and password
-- **User Login** - Secure authentication with JWT tokens
-- **Profile Management** - View and edit user profile information
-- **Phone Verification** - Phone number verification via Twilio SMS
+- User Registration with name, email, phone number, and password
+- Secure Login with JWT tokens
+- Profile Management - view and edit user information
+- Phone Verification via Twilio SMS
 
 ### Wallet Management
-- **Wallet Balance** - View current wallet balance
-- **Account Number** - Each user gets a unique account number
-- **Transaction History** - Complete history of all transactions
+- View current wallet balance
+- Unique account number for each user
+- Complete transaction history
 
 ### Send Money
-- **Send to Account Number** - Send money using recipient's account number
-- **Send to Phone Number** - Send money using recipient's phone number
-- **QR Code Scanning** - Scan recipient's QR code for quick transfers
-- **Transaction Description** - Add notes to transactions
+- Send money using recipient's account number or phone number
+- QR Code Scanning for quick transfers
+- Add notes to transactions
 
 ### Receive Money
-- **QR Code Display** - Show your QR code for others to scan
-- **Transaction List** - View all received transactions with filtering
-- **Search & Filter** - Search transactions by name or account number
+- QR Code Display for receiving money
+- Transaction list with filtering and search
+
+### Top Up
+- Add money from bank card using Stripe
+- Multiple payment options
 
 ### Notifications
-- **SMS Notifications** - Receive SMS alerts for transactions via Twilio
-- **In-App Notifications** - View notifications within the app
-- **Notification Badge** - Unread notification counter
+- SMS alerts for transactions via Twilio
+- In-app notifications with unread counter
 
 ### User Interface
-- **Modern Dark Theme** - Sleek dark UI design
-- **Responsive Design** - Works on mobile and desktop
-- **Real-time Updates** - React Query for data synchronization
-- **Loading States** - Smooth loading indicators
-
-## Tech Stack
-
-### Frontend
-- **React** - UI framework
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **React Router** - Navigation
-- **React Query** - Data fetching
-- **Lucide React** - Icons
-- **react-qr-code** - QR code generation
-- **@yudiel/react-qr-scanner** - QR code scanning
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express** - Web framework
-- **MongoDB** - Database
-- **Mongoose** - ODM
-- **JWT** - Authentication
-- **Twilio** - SMS notifications
-- **Bcrypt** - Password hashing
-
-## Project Structure
-
-```
-Digi-PAY/
-├── backend/
-│   ├── src/
-│   │   ├── config/          # Database configuration
-│   │   ├── controllers/    # Route controllers
-│   │   ├── middlewares/    # Express middlewares
-│   │   ├── models/         # MongoDB models
-│   │   ├── routes/         # API routes
-│   │   └── utils/          # Utility functions
-│   ├── index.js           # Server entry point
-│   └── package.json
-│
-└── frontend/
-    ├── src/
-    │   ├── components/     # React components
-    │   ├── hooks/         # Custom React hooks
-    │   ├── lib/           # Library configurations
-    │   ├── pages/         # Page components
-    │   ├── store/         # State management
-    │   └── router/        # Route definitions
-    ├── index.html
-    └── package.json
-```
+- Modern dark theme design
+- Responsive for mobile and desktop
+- Real-time updates with React Query
 
 ## Getting Started
 
 ### Prerequisites
 
-- **Node.js** (v18 or higher)
-- **MongoDB** (local or Atlas)
-- **npm** or **yarn**
+- Node.js (v18 or higher)
+- MongoDB (local or Atlas)
 
 ### Clone the Repository
 
@@ -121,6 +72,7 @@ cp .env.example .env
 # TWILIO_ACCOUNT_SID=your_twilio_sid
 # TWILIO_AUTH_TOKEN=your_twilio_auth_token
 # TWILIO_PHONE_NUMBER=your_twilio_phone_number
+# STRIPE_SECRET_KEY=your_stripe_secret_key
 # PORT=5000
 
 # Start the backend server
@@ -142,12 +94,12 @@ npm run dev
 
 ### Access the Application
 
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5000
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:5000
 
 ## Environment Variables
 
-### Backend (.env)
+Create a `.env` file in the backend directory:
 
 ```env
 # MongoDB
@@ -161,30 +113,13 @@ TWILIO_ACCOUNT_SID=your_twilio_account_sid
 TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_PHONE_NUMBER=your_twilio_phone_number
 
+# Stripe Payment
+STRIPE_SECRET_KEY=your_stripe_secret_key
+
 # Server
 PORT=5000
 NODE_ENV=development
 ```
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/signin` - Login user
-- `GET /api/auth/me` - Get current user
-- `PUT /api/auth/profile` - Update profile
-
-### Transactions
-- `GET /api/transaction` - Get user transactions
-- `POST /api/transaction/send` - Send money
-- `GET /api/transaction/:reference` - Get transaction by reference
-
-### Wallet
-- `GET /api/wallet` - Get user wallet
-
-### Notifications
-- `GET /api/notification` - Get user notifications
-- `PUT /api/notification/:id/read` - Mark notification as read
 
 ## Available Scripts
 
